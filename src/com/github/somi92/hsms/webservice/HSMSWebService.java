@@ -17,14 +17,6 @@ public class HSMSWebService implements HSMSServices {
 	private static final String DATABASE_URL = "jdbc:mysql://localhost/hsms_database";
 	private static final String USER = "milos";
 	private static final String PASSWORD = "Skydiving@1992";
-	
-	
-	@Override
-	@WebMethod
-	public String helloWorld(String name) {
-		// TODO Auto-generated method stub
-		return "Hello "+name+"!";
-	}
 
 	@Override
 	@WebMethod
@@ -38,11 +30,13 @@ public class HSMSWebService implements HSMSServices {
 					"from HUMANITARNI_BROJ HB join ORGANIZACIJA ORG using (org_id) " +
 					"order by HB.prioritet;";
 			LinkedList<HSMS> allActions = new LinkedList<>();
+			PreparedStatement statement = null;
+			ResultSet queryResult = null;
 			
 			try {
 				
-				PreparedStatement statement = connection.prepareStatement(query);
-				ResultSet queryResult = statement.executeQuery();
+				statement = connection.prepareStatement(query);
+				queryResult = statement.executeQuery();
 				
 				while(queryResult.next()) {
 					HSMS hsms = new HSMS();
@@ -57,7 +51,6 @@ public class HSMSWebService implements HSMSServices {
 					allActions.add(hsms);
 //					System.out.println(hsms);
 				}
-				connection.close();
 				return (HSMS[]) allActions.toArray(new HSMS[allActions.size()]);
 				
 			} catch (SQLException e) {
@@ -65,6 +58,7 @@ public class HSMSWebService implements HSMSServices {
 				e.printStackTrace();
 			} finally {
 				try {
+					statement.close();
 					connection.close();
 				} catch (SQLException e) {
 					// TODO Auto-generated catch block
@@ -72,8 +66,6 @@ public class HSMSWebService implements HSMSServices {
 				}
 			}
 		}
-		
-		
 		return null;
 	}
 
@@ -81,6 +73,51 @@ public class HSMSWebService implements HSMSServices {
 	@WebMethod
 	public HSMS[] listActionsByPriority(int priority) {
 		// TODO Auto-generated method stub
+		
+Connection connection = connectToDatabase();
+		
+		if(connection != null) {
+			String query = "select HB.hb_id, HB.opis, HB.broj, HB.cena, ORG.naziv, ORG.website, HB.prioritet, HB.napomena " +
+					"from HUMANITARNI_BROJ HB join ORGANIZACIJA ORG using (org_id) " +
+					"where HB.prioritet = ?;";
+			LinkedList<HSMS> allActions = new LinkedList<>();
+			PreparedStatement statement = null;
+			ResultSet queryResult = null;
+			
+			try {
+				
+				statement = connection.prepareStatement(query);
+				statement.setInt(1, priority);
+				queryResult = statement.executeQuery();
+				
+				while(queryResult.next()) {
+					HSMS hsms = new HSMS();
+					hsms.setId(queryResult.getInt("hb_id"));
+					hsms.setDesc(queryResult.getString("opis"));
+					hsms.setNumber(queryResult.getString("broj"));
+					hsms.setPrice(queryResult.getString("cena"));
+					hsms.setOrganisation(queryResult.getString("naziv"));
+					hsms.setWebPage(queryResult.getString("website"));
+					hsms.setPriority(queryResult.getInt("prioritet"));
+					hsms.setRemark(queryResult.getString("napomena"));
+					allActions.add(hsms);
+//					System.out.println(hsms);
+				}
+				return (HSMS[]) allActions.toArray(new HSMS[allActions.size()]);
+				
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				try {
+					statement.close();
+					connection.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 		return null;
 	}
 
@@ -98,4 +135,21 @@ public class HSMSWebService implements HSMSServices {
 		return null;
 	}
 	
+	public int test(int r) {
+		try {
+			if(r == 0) {
+				System.out.println("OK");
+			} else {
+				throw new Exception();
+			}
+			return 0;
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("In catch!");
+		} finally {
+			System.out.println("In finally!");
+		}
+		System.out.println("End of method.");
+		return 1;
+	}
 }
