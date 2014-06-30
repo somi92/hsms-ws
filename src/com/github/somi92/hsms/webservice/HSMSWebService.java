@@ -1,11 +1,15 @@
 package com.github.somi92.hsms.webservice;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.Properties;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
@@ -14,9 +18,37 @@ import javax.jws.WebService;
 public class HSMSWebService implements HSMSServices {
 
 	private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	private static final String DATABASE_URL = "jdbc:mysql://localhost/hsms_database";
-	private static final String USER = "milos";
-	private static final String PASSWORD = "Skydiving@1992";
+	
+	private static String DATABASE_URL;
+	private static String USER;
+	private static String PASSWORD;
+	
+	public HSMSWebService() {
+		Properties prop = new Properties();
+		InputStream input = null;
+	 
+		try {
+	 
+			input = new FileInputStream("config.properties");
+
+			prop.load(input);
+			
+			DATABASE_URL = prop.getProperty("DB_URL");
+			USER = prop.getProperty("DB_USER");
+			PASSWORD = prop.getProperty("DB_PASS");
+	 
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 
 	@Override
 	@WebMethod
